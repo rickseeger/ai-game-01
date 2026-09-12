@@ -1,3 +1,9 @@
-# Standard library only on Linux/macOS.
-# Windows additionally requires the precompiled curses wheel:
-# windows-curses
+# EMBERLIGHT dependencies.
+#
+# Linux/macOS: standard library only - nothing to install.
+#
+# Windows: Python does not ship curses. Install the only optional dependency:
+#   pip install windows-curses
+#
+# This file intentionally lists no hard dependencies so a clean Linux
+# checkout runs with zero installs.

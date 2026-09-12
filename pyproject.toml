@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emberlight"
+dynamic = ["version"]
+description = "EMBERLIGHT - a first-person ASCII raycast dungeon descent for the terminal."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "G - the Gardener" }]
+keywords = ["game", "roguelike", "ascii", "raycast", "terminal", "curses"]
+classifiers = [
+    "Environment :: Console :: Curses",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = []
+
+[project.optional-dependencies]
+windows = ["windows-curses"]
+
+[project.scripts]
+emberlight = "emberlight.main:main"
+
+[project.urls]
+Repository = "https://github.com/rickseeger/ai-game-01"
+
+[tool.setuptools]
+packages = ["emberlight"]
+
+[tool.setuptools.dynamic]
+version = { attr = "emberlight.__version__" }
