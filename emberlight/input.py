@@ -2,7 +2,8 @@
 
 curses is imported lazily so that ``import emberlight`` (and the headless
 ``--demo`` and unittest paths) never require a terminal or the Windows curses
-wheel.  Node 3 fleshes this out into the real key loop.
+wheel.  Node 3 adds :func:`translate_key` so the game loop can talk to the
+terminal-agnostic ``Game.press``.
 """
 
 import sys
@@ -58,3 +59,26 @@ def shutdown_terminal(curses) -> None:
         curses.curs_set(1)
     finally:
         curses.endwin()
+
+
+def translate_key(key, curses):
+    """Map a raw curses key code to a semantic token for ``Game.press``.
+
+    Returns None for key codes the game does not understand (including -1,
+    the "no key pending" sentinel used with ``nodelay``).
+    """
+    if key == -1:
+        return None
+    if key == curses.KEY_UP:
+        return "up"
+    if key == curses.KEY_DOWN:
+        return "down"
+    if key == curses.KEY_LEFT:
+        return "left"
+    if key == curses.KEY_RIGHT:
+        return "right"
+    if key == 27:  # Esc
+        return "esc"
+    if 0 <= key < 256:
+        return chr(key)
+    return None

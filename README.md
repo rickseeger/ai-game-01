@@ -6,20 +6,33 @@ lantern back to the surface before the dark takes you.
 
 Canonical game design lives in [DESIGN.md](DESIGN.md) - read that first.
 This repository is the G7 mission tree for building the game one node at a
-time; the current state is the **node 2 project skeleton**.
+time; the current state is the **node 3 engine and playable core loop**.
 
-## What is here (node 2)
+## What is here (node 3)
 
-- `emberlight/` - the Python package (Python 3.10+, standard library only).
-- A minimal but real entry point that renders something and exits cleanly.
-- The canonical constants table (`emberlight/config.py`), mirrored from
-  DESIGN.md so later engine work has a single source of truth.
-- A trivial, dependency-free test harness (`unittest` from the stdlib).
-- Cross-platform (Linux + Windows) CI via GitHub Actions.
-- Packaging metadata (`pyproject.toml`) with an `emberlight` console script.
+The full playable game, implemented directly from DESIGN.md:
 
-The engine and mechanics land in node 3, implemented directly from
-DESIGN.md.
+- A DDA **raycast renderer** (`emberlight/engine.py`) that draws the world as
+  a 60-degree first-person ASCII view with a 5-step distance shade ramp,
+  per-column z-buffer, and billboard sprites for beacons, stairs, loot and
+  monsters. Monochrome-safe (pure-ASCII fallback).
+- The **light cone** mechanic: your lantern projects a wedge whose radius
+  shrinks with your remaining fuel - the screen literally closes in as the
+  ember drains.
+- Seeded **procedural generation** (`emberlight/mapgen.py`): a
+  recursive-backtracker maze with loop carving, a border entrance, a beacon
+  at maximum BFS distance, and the section-8.2 entity budgets. A daily seed
+  produces the *same* maze for everyone; a free seed is replayable.
+- The **playable loop** (`emberlight/game.py`): grid movement with
+  90-degree turns, strafe and sprint; fuel drain with ring scaling, dread and
+  sprint costs; beacon relighting (2s hold, attracts monsters); flare repel
+  and stun; automatic loot pickup; the seven-ring descent; the ascent
+  gauntlet (beacons go dark, monsters respawn); and win / lose / bank states.
+- Deterministic **monster AI** (`emberlight/ai.py`): WANDER / CHASE / STUNNED,
+  sight + hearing detection, and a 1.0s attack windup.
+- Persistent **records** (`emberlight/records.py`) at
+  `~/.emberlight/records.json`, plus a Records screen and Today's Descent /
+  Free Descent title menu.
 
 ## Requirements
 
@@ -35,25 +48,50 @@ DESIGN.md.
 ## Run
 
 ```
-python -m emberlight          # interactive terminal view (title screen)
-python -m emberlight --demo   # render a static demo frame to stdout
+python -m emberlight          # interactive terminal game
+python -m emberlight --demo   # render a static seeded frame to stdout
 python -m emberlight --version
 ```
 
 Convenience launchers: `./run.sh` (Linux/macOS) or `run.bat` (Windows).
 
-The interactive view needs a curses-capable terminal. With no terminal (CI,
+The interactive game needs a curses-capable terminal. With no terminal (CI,
 pipes) it falls back to the demo render and still exits cleanly. If curses is
 unavailable it prints a one-line message and exits cleanly, never crashing.
 
+## Controls
+
+| Key(s)        | Action                                  |
+|---------------|-----------------------------------------|
+| W / Up        | Step forward                            |
+| S / Down      | Step backward                           |
+| A / Left      | Turn left 90 degrees                    |
+| D / Right     | Turn right 90 degrees                   |
+| Q / E         | Strafe left / right                     |
+| Shift + W     | Sprint forward (costs extra fuel)       |
+| Space         | Interact (relight beacon / use stairs)  |
+| F             | Flare (repels and stuns nearby monsters)|
+| M             | Toggle the minimap                      |
+| Esc           | Abort the run (returns to the menu)     |
+
+Note: DESIGN.md lists E as both strafe-right and interact. Node 3 resolves
+this by binding E to strafe-right and Space to interact, so the two actions
+never collide.
+
 ## Test
 
-The test harness is the standard library `unittest` - zero dependencies, so
-the exact same command works on Linux and Windows:
+The harness is the standard library `unittest` - zero dependencies, so the
+exact same command works on Linux and Windows:
 
 ```
 python -m unittest discover -s tests -v
 ```
+
+The suite covers procedural generation (determinism, connectivity, budgets),
+the raycaster (DDA, shade ramp, light cone, sprite occlusion), and the full
+game loop headlessly (movement, fuel, relight, flare, monster AI, ascent,
+scoring, records, and a scripted end-to-end descent + relight + ascent +
+bank).
 
 ## Install / build
 
@@ -66,9 +104,6 @@ python -m venv .venv
 pip install -e .
 emberlight --demo
 ```
-
-`pyproject.toml` declares the build backend (setuptools) and metadata, and
-reads the version from `emberlight.__version__`.
 
 ## CI
 
@@ -89,18 +124,24 @@ ai-game-01/
   emberlight/
     __init__.py        package + __version__
     __main__.py        enables `python -m emberlight`
-    main.py            entry point / mode dispatch
+    main.py            entry point / curses game loop / menu dispatch
     config.py          constants and tables (single source of truth)
-    render.py          shade ramp, title banner, demo frame
-    input.py           curses terminal setup / teardown
-    engine.py          (stub) DDA raycaster  -> node 3
-    mapgen.py          (stub) seeded floors   -> node 3
-    entities.py        (stub) game objects    -> node 3
-    ai.py              (stub) monster AI      -> node 3
-    records.py         (stub) local records   -> node 3
-    ui.py              (stub) menus/screens   -> node 3
+    mapgen.py          seeded floor generation (maze, beacon, entities)
+    engine.py          DDA raycaster, z-buffer, sprite projection
+    entities.py        player, monster, loot, beacon data models
+    ai.py              monster state machine (WANDER / CHASE / STUNNED)
+    render.py          HUD, frame compositor, minimap, demo frame
+    game.py            the headless Game simulation (press + tick)
+    input.py           curses terminal setup / teardown / key mapping
+    records.py         records.json load / save / update
+    ui.py              title menu, records screen, summary screen
   tests/
     test_smoke.py      trivial smoke tests
+    test_mapgen.py     procedural generation
+    test_engine.py     raycaster / light cone / sprites
+    test_game.py       game mechanics
+    test_records.py    records persistence
+    test_core_loop.py  end-to-end scripted run
 ```
 
 ## License

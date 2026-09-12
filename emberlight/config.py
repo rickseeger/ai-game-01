@@ -121,3 +121,29 @@ KEY_INTERACT = (" ", "e", "E")
 KEY_FLARE = ("f", "F")
 KEY_MINIMAP = ("m", "M")
 KEY_QUIT = ("q", "Q", "\x1b")
+
+
+# --- Node 3 additions (engine / mechanics) ---------------------------------
+# These tune values are implied by DESIGN.md but not spelled out as named
+# constants there; they are captured here so the whole game reads one table.
+
+# Death (DESIGN.md sections 6.2 and 10): fuel=0 fades to black over 2s.
+DEATH_FADE_SECONDS = 2.0
+
+# Sprint (DESIGN.md sections 6.1 and 8.3): Shift+W is a single forward cell
+# at a higher fuel cost (the "+1.5/s while sprinting" applies to the step).
+SPRINT_FUEL_COST = 1.5
+
+# Lit-beacon ambient light and safe zone (DESIGN.md section 6.4).  Because a
+# recursive-backtracker maze is one fully connected component, "room" is
+# modelled as a small radius around the beacon: monsters neither enter nor
+# respawn inside it, and the player's light is boosted while near it.
+AMBIENT_RADIUS = 6
+SAFE_ZONE_RADIUS = 2
+
+# Flare (DESIGN.md sections 6.5 and 9.2): repel (flee) distance in tiles.
+FLARE_FLEE_TILES = 3
+
+# Facing vectors in (dx, dy) order: N, E, S, W (grid y grows downward).
+FACINGS = ((0, -1), (1, 0), (0, 1), (-1, 0))
+FACING_NAMES = ("N", "E", "S", "W")

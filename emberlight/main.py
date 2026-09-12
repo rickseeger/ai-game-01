@@ -1,4 +1,4 @@
-"""EMBERLIGHT entry point.
+"""EMBERLIGHT entry point and curses game loop.
 
 Modes
 -----
@@ -6,53 +6,101 @@ Modes
 ``python -m emberlight --demo``      render a static frame to stdout, exit 0
 ``python -m emberlight --version``   print the version, exit 0
 
-The interactive view is intentionally minimal for node 2 (a title screen that
-waits for Q/Esc).  Node 3 replaces ``run_interactive`` with the real menu and
-game loop.
+The interactive view opens a title menu (Today's Descent / Free Descent /
+Records), then runs the real-time raycast game loop.  Everything is built on
+the headless ``Game`` object so the same simulation drives the tests.
 """
 
 import argparse
+import datetime
+import random
 import sys
+import time
 
 from . import __version__
+from . import config
 from . import input as input_mod
-from . import render
+from . import records, render, ui
+from .game import Game
 
 
 def run_interactive() -> int:
     """Start the interactive terminal view.  Exits cleanly everywhere."""
     if not sys.stdout.isatty():
-        # No TTY (CI, pipes): fall back to the demo render so the entry point
-        # still renders something and exits cleanly in any environment.
         print("No interactive terminal detected; showing demo frame.", file=sys.stderr)
         return run_demo()
 
     try:
         stdscr, curses = input_mod.init_terminal()
     except input_mod.TerminalUnavailableError as exc:
-        # DESIGN.md section 13.1: print a one-line message and exit cleanly.
         print(str(exc), file=sys.stderr)
         return 0
-    except Exception as exc:  # curses.error on odd terminals, etc.
+    except Exception as exc:
         print(f"Could not start the interactive view: {exc}", file=sys.stderr)
         return 0
 
     try:
-        max_rows, max_cols = stdscr.getmaxyx()
-        stdscr.clear()
-        start_row = 2
-        for i, line in enumerate(render.TITLE):
-            stdscr.addstr(start_row + i, 2, line[: max_cols - 4])
-        prompt = "EMBERLIGHT - press Q (or Esc) to quit."
-        stdscr.addstr(start_row + len(render.TITLE) + 2, 2, prompt[: max_cols - 4])
-        stdscr.refresh()
         while True:
-            key = stdscr.getch()
-            if key in (ord("q"), ord("Q"), 27):  # 27 = Esc
-                break
-        return 0
+            mode = ui.title_menu(stdscr, curses)
+            if mode is None:
+                return 0
+            if mode == "records":
+                ui.records_screen(stdscr, curses, records.load_records())
+                continue
+            game = _new_game(mode)
+            run_game(stdscr, curses, game)
+            ui.summary_screen(stdscr, curses, game)
     finally:
         input_mod.shutdown_terminal(curses)
+
+
+def _new_game(mode):
+    if mode == "daily":
+        seed = int(datetime.date.today().strftime("%Y%m%d"))
+        return Game(seed, daily=True)
+    seed = random.randint(1, 10**9)
+    return Game(seed, daily=False)
+
+
+def run_game(stdscr, curses, game):
+    """The real-time curses loop for one run."""
+    stdscr.nodelay(True)
+    last = time.monotonic()
+    while not game.over:
+        now = time.monotonic()
+        dt = min(now - last, 0.1)
+        last = now
+
+        while True:
+            key = stdscr.getch()
+            if key == -1:
+                break
+            ch = input_mod.translate_key(key, curses)
+            if ch is None:
+                continue
+            if ch == "esc":
+                game.press(" ")  # no-op; Esc quits via the menu only
+                # Esc during play returns to the menu (quit the run).
+                game._finish("dead", 0)
+                return
+            game.press(ch)
+            if game.over:
+                break
+
+        game.tick(dt)
+
+        rows, cols = stdscr.getmaxyx()
+        frame = render.render_frame(game, cols, rows, ascii_fallback=False)
+        stdscr.erase()
+        for r, line in enumerate(frame):
+            if r >= rows:
+                break
+            try:
+                stdscr.addstr(r, 0, line[:cols])
+            except Exception:
+                pass
+        stdscr.refresh()
+        time.sleep(0.03)
 
 
 def run_demo() -> int:
