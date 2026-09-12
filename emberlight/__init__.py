@@ -10,4 +10,4 @@ persistent records, and the interactive curses loop.  The whole simulation is
 driven headlessly through ``Game`` so it is unit-tested without a terminal.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

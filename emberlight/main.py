@@ -90,7 +90,8 @@ def run_game(stdscr, curses, game):
         game.tick(dt)
 
         rows, cols = stdscr.getmaxyx()
-        frame = render.render_frame(game, cols, rows, ascii_fallback=False)
+        frame = render.render_frame(game, cols, rows,
+                                    ascii_fallback=input_mod.prefer_ascii())
         stdscr.erase()
         for r, line in enumerate(frame):
             if r >= rows:

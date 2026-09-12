@@ -6,6 +6,7 @@ wheel.  Node 3 adds :func:`translate_key` so the game loop can talk to the
 terminal-agnostic ``Game.press``.
 """
 
+import os
 import sys
 
 
@@ -32,6 +33,32 @@ def curses_available() -> bool:
     except TerminalUnavailableError:
         return False
     return True
+
+
+def prefer_ascii() -> bool:
+    """True when the interactive view should use the pure-ASCII glyph set.
+
+    The unicode shade ramp (block elements U+2588..U+2593) and the heart
+    indicators (U+2665/U+2661) render on UTF-8 terminals and on the DOS code
+    pages (cp437/cp850/cp866), but a legacy Windows console running a Western
+    code page (cp1252/latin-1) cannot show them and prints replacement boxes
+    instead.  Fall back to the monochrome-safe ASCII glyphs in that case so
+    the game stays playable identically everywhere.
+
+    Set ``EMBERLIGHT_ASCII=1`` to force ASCII on any terminal.
+    """
+    if os.environ.get("EMBERLIGHT_ASCII", "").strip().lower() in (
+        "1", "true", "yes", "on",
+    ):
+        return True
+    enc = (getattr(sys.stdout, "encoding", None) or "").lower()
+    enc = enc.replace("-", "").replace("_", "")
+    # Western single-byte code pages that lack the block/heart glyphs.
+    western = {
+        "ascii", "usascii", "latin1", "iso88591",
+        "cp1252", "cp1250", "cp1251", "cp1253", "cp1254", "cp1257",
+    }
+    return enc in western
 
 
 def init_terminal():

@@ -6,7 +6,7 @@ lantern back to the surface before the dark takes you.
 
 Canonical game design lives in [DESIGN.md](DESIGN.md) - read that first.
 This repository is the G7 mission tree for building the game one node at a
-time; the current state is the **node 3 engine and playable core loop**.
+time; the current state is the **node 4 Windows port** of the node 3 engine and playable core loop.
 
 ## What is here (node 3)
 
@@ -44,6 +44,17 @@ The full playable game, implemented directly from DESIGN.md:
   ```
   pip install windows-curses
   ```
+
+## Windows
+
+The Windows port is first-class. For the full install-and-run guide see
+[WINDOWS.md](WINDOWS.md), and grab the ready-to-run release artifact
+[`release/emberlight-windows-v0.3.0.zip`](release/emberlight-windows-v0.3.0.zip):
+extract it, `pip install windows-curses`, then double-click `run.bat`
+(`run.bat` locates Python for you, trying `python` then the `py` launcher).
+On a legacy console that cannot display the unicode block-shade / heart
+glyphs the game falls back to the pure-ASCII glyph set automatically; set
+`EMBERLIGHT_ASCII=1` to force ASCII anywhere.
 
 ## Run
 
@@ -120,7 +131,10 @@ ai-game-01/
   pyproject.toml       packaging / build metadata
   requirements.txt     (empty on Linux; windows-curses noted for Windows)
   run.sh / run.bat     convenience launchers
+  WINDOWS.md           Windows install & run guide (node 4)
   .github/workflows/   CI (Linux + Windows matrix)
+  release/             ready-to-run Windows zip artifact
+  tools/               package_windows.py (builds the release zip)
   emberlight/
     __init__.py        package + __version__
     __main__.py        enables `python -m emberlight`
