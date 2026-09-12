@@ -1,0 +1,3 @@
+# Standard library only on Linux/macOS.
+# Windows additionally requires the precompiled curses wheel:
+# windows-curses
