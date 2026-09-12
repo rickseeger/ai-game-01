@@ -1,16 +1,21 @@
 # EMBERLIGHT on Windows
 
-This is the official Windows install-and-run guide for EMBERLIGHT (the
-node 4 Windows port). It takes you from a clean Windows machine to a running
-game in a few steps. EMBERLIGHT is pure Python and needs no compilation; on
-Windows there is exactly one optional dependency (`windows-curses`) because
-Windows does not ship the `curses` module with Python.
+This is the official Windows install-and-run guide for EMBERLIGHT (the node 4
+Windows port, re-verified from a clean state in node 5). It takes you from a
+clean Windows machine to a running game in a few steps. EMBERLIGHT is pure
+Python and needs no compilation; on Windows there is exactly one optional
+dependency (`windows-curses`) because Windows does not ship the `curses`
+module with Python.
+
+> **Playtesting?** See [PLAYTEST.md](PLAYTEST.md) for the staged candidate and
+> the short how-to.
 
 ## 1. Requirements
 
 - Windows 10 or Windows 11.
 - Python 3.10 or newer, from <https://www.python.org/downloads/windows/>.
   During install, tick **"Add python.exe to PATH"**.
+- Run in **Windows Terminal** (recommended) or any UTF-8 capable console.
 
 ## 2. Get the game
 
@@ -22,7 +27,7 @@ Either download and extract the release artifact:
 
 Or clone the repository:
 
-```
+```text
 git clone https://github.com/rickseeger/ai-game-01.git
 cd ai-game-01
 ```
@@ -32,7 +37,7 @@ cd ai-game-01
 Open PowerShell or Command Prompt in the game folder (the folder that
 contains `run.bat`), then run:
 
-```
+```text
 pip install windows-curses
 ```
 
@@ -43,14 +48,14 @@ If `pip` is not recognised, use `python -m pip install windows-curses` or
 
 Double-click `run.bat`, or run it from a prompt in the game folder:
 
-```
+```text
 run.bat
 ```
 
 `run.bat` locates Python for you (trying `python` first, then the `py`
 launcher) and starts the interactive game. Useful variants:
 
-```
+```text
 run.bat --version                          # print the version and exit
 run.bat --demo                             # print a static frame, no terminal needed
 python -m unittest discover -s tests       # run the full test suite
@@ -91,7 +96,7 @@ Western code page (e.g. cp1252) these can degrade. Two options:
 - Force the pure-ASCII glyph set (identical gameplay, ASCII shading) by
   setting the environment variable, then restarting:
 
-  ```
+  ```text
   set EMBERLIGHT_ASCII=1
   run.bat
   ```
@@ -103,14 +108,15 @@ render the glyphs.
 
 From a clean state, all of the following must succeed:
 
-```
+```text
 python -m emberlight --version          # prints "emberlight 0.3.0"
 python -m emberlight --demo             # prints a rendered frame, exits 0
-python -m unittest discover -s tests    # full suite passes
+python -m unittest discover -s tests    # full suite (63 tests) passes
 run.bat                                 # opens the interactive game
 ```
 
 Continuous integration (`.github/workflows/ci.yml`) runs the `--demo`
 smoke-run and the full test suite on `windows-latest` for Python 3.10, 3.12
 and 3.13 on every push, so the Windows port is verified green on every
-commit.
+commit. Node 5 confirmed this on the current HEAD (all three Windows matrix
+jobs green) and re-exercised the `run.bat` / zip path documented above.

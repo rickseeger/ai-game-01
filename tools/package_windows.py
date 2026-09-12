@@ -31,6 +31,8 @@ TOP = "emberlight-windows"
 INCLUDE_TOP = (
     "README.md",
     "WINDOWS.md",
+    "LINUX.md",
+    "PLAYTEST.md",
     "DESIGN.md",
     "pyproject.toml",
     "requirements.txt",

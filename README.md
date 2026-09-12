@@ -4,11 +4,18 @@ A first-person ASCII raycast dungeon descent for the terminal. Descend into
 the Buried City of Verrenn, relight the dead beacons, and race your dying
 lantern back to the surface before the dark takes you.
 
-Canonical game design lives in [DESIGN.md](DESIGN.md) - read that first.
+Canonical game design lives in [DESIGN.md](DESIGN.md) — read that first.
 This repository is the G7 mission tree for building the game one node at a
-time; the current state is the **node 4 Windows port** of the node 3 engine and playable core loop.
+time. The current state is **node 5**: the node 3 engine + playable core loop,
+the node 4 Windows port, and this node's complete install/run documentation,
+clean-state verification on both platforms, and playtest staging.
 
-## What is here (node 3)
+- **Play it now?** Jump to [Playtest](PLAYTEST.md) for the staged candidate
+  and the one-paragraph how-to.
+- **Linux / macOS** install & run guide: [LINUX.md](LINUX.md).
+- **Windows** install & run guide: [WINDOWS.md](WINDOWS.md).
+
+## What is here
 
 The full playable game, implemented directly from DESIGN.md:
 
@@ -17,7 +24,7 @@ The full playable game, implemented directly from DESIGN.md:
   per-column z-buffer, and billboard sprites for beacons, stairs, loot and
   monsters. Monochrome-safe (pure-ASCII fallback).
 - The **light cone** mechanic: your lantern projects a wedge whose radius
-  shrinks with your remaining fuel - the screen literally closes in as the
+  shrinks with your remaining fuel — the screen literally closes in as the
   ember drains.
 - Seeded **procedural generation** (`emberlight/mapgen.py`): a
   recursive-backtracker maze with loop carving, a border entrance, a beacon
@@ -37,28 +44,49 @@ The full playable game, implemented directly from DESIGN.md:
 ## Requirements
 
 - Python 3.10 or newer.
-- Linux / macOS: standard library only - no installs required.
+- Linux / macOS: standard library only — no installs required.
 - Windows: install the single optional dependency (`python` does not ship
   curses on Windows):
 
-  ```
+  ```text
   pip install windows-curses
   ```
 
-## Windows
+## Quick start
 
-The Windows port is first-class. For the full install-and-run guide see
-[WINDOWS.md](WINDOWS.md), and grab the ready-to-run release artifact
-[`release/emberlight-windows-v0.3.0.zip`](release/emberlight-windows-v0.3.0.zip):
-extract it, `pip install windows-curses`, then double-click `run.bat`
-(`run.bat` locates Python for you, trying `python` then the `py` launcher).
-On a legacy console that cannot display the unicode block-shade / heart
-glyphs the game falls back to the pure-ASCII glyph set automatically; set
-`EMBERLIGHT_ASCII=1` to force ASCII anywhere.
+### Linux / macOS
+
+```sh
+git clone https://github.com/rickseeger/ai-game-01.git
+cd ai-game-01
+python3 -m emberlight            # play (no install needed)
+```
+
+Optional clean install (isolated venv + console command):
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e .
+emberlight
+```
+
+See [LINUX.md](LINUX.md) for the full guide, tests, and troubleshooting.
+
+### Windows
+
+1. Download [`release/emberlight-windows-v0.3.0.zip`](release/emberlight-windows-v0.3.0.zip)
+   and extract it (e.g. to `C:\emberlight`).
+2. Install Python 3.10+ from <https://www.python.org/downloads/windows/>
+   (tick **"Add python.exe to PATH"**).
+3. In the extracted folder run `pip install windows-curses`.
+4. Double-click `run.bat` (it locates Python for you).
+
+See [WINDOWS.md](WINDOWS.md) for the full guide, controls, and troubleshooting.
 
 ## Run
 
-```
+```text
 python -m emberlight          # interactive terminal game
 python -m emberlight --demo   # render a static seeded frame to stdout
 python -m emberlight --version
@@ -91,25 +119,25 @@ never collide.
 
 ## Test
 
-The harness is the standard library `unittest` - zero dependencies, so the
+The harness is the standard library `unittest` — zero dependencies, so the
 exact same command works on Linux and Windows:
 
-```
+```text
 python -m unittest discover -s tests -v
 ```
 
-The suite covers procedural generation (determinism, connectivity, budgets),
-the raycaster (DDA, shade ramp, light cone, sprite occlusion), and the full
-game loop headlessly (movement, fuel, relight, flare, monster AI, ascent,
-scoring, records, and a scripted end-to-end descent + relight + ascent +
-bank).
+The suite (63 tests) covers procedural generation (determinism, connectivity,
+budgets), the raycaster (DDA, shade ramp, light cone, sprite occlusion), and
+the full game loop headlessly (movement, fuel, relight, flare, monster AI,
+ascent, scoring, records, and a scripted end-to-end descent + relight +
+ascent + bank).
 
 ## Install / build
 
 There is no compile step (Python is interpreted). To install the package and
 the `emberlight` console script into a virtualenv:
 
-```
+```text
 python -m venv .venv
 . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e .
@@ -124,14 +152,16 @@ Python 3.10, 3.12, and 3.13 on every push to `main` and every pull request.
 
 ## Project layout
 
-```
+```text
 ai-game-01/
-  README.md            this file
+  README.md            this file (top-level guide)
   DESIGN.md            canonical game design spec (from node 1)
+  LINUX.md             Linux / macOS install & run guide (node 5)
+  WINDOWS.md           Windows install & run guide (node 4, updated node 5)
+  PLAYTEST.md          playtest staging note for human approval (node 5)
   pyproject.toml       packaging / build metadata
   requirements.txt     (empty on Linux; windows-curses noted for Windows)
   run.sh / run.bat     convenience launchers
-  WINDOWS.md           Windows install & run guide (node 4)
   .github/workflows/   CI (Linux + Windows matrix)
   release/             ready-to-run Windows zip artifact
   tools/               package_windows.py (builds the release zip)
@@ -155,6 +185,7 @@ ai-game-01/
     test_engine.py     raycaster / light cone / sprites
     test_game.py       game mechanics
     test_records.py    records persistence
+    test_platform.py   Windows ASCII-fallback detection (node 4)
     test_core_loop.py  end-to-end scripted run
 ```
 
